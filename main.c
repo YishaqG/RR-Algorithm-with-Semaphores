@@ -87,7 +87,7 @@ int main()
           create_resource(ctrlR);
           break;
         case 2:
-          //add res
+          add_resource(ctrlR);
           break;
         case 3:
           printf("\n");

@@ -475,6 +475,7 @@ void rr(pcbStates *states, pcbCtrl *ctrl, int quantum, int *totalTime)
       if(states->readys->front == states->readys->rear)
       {
         printf("Proceso comenzando ejecución en tiempo: %i\n\n",*totalTime);
+
         states->readys->front->state = ID_EJEC;
         states->readys->front->first_exe = 1;
         if(states->readys->front->tim[1] <= quantum)
@@ -591,6 +592,95 @@ int execute(int t,pcb *exec)
   }
 
   return i;
+}
+
+/*Algoritmo de despacho RR con uso de recursos manejados por semáforos*/
+void rr_sem(resourcesCtrl *ctrlR,pcbStates *states, pcbCtrl *ctrl, int quantum, int *totalTime)
+{
+  pcb *temp,*f = states->readys->front;
+  if(states->readys->front != NULL)
+  {
+    if(states->readys->front->nzc != 0)
+    {
+      if(states->readys->front->first_exe == 0)
+      {
+        if(states->readys->front == states->readys->rear)
+        {
+          printf("Proceso comenzando ejecución en tiempo: %i\n\n",*totalTime);
+
+          states->readys->front->state = ID_EJEC;
+          states->readys->front->first_exe = 1;
+
+          if(!states->readys->front->ncz[2].wr)
+          {
+            if(states->readys->front->tim[1] <= quantum)
+            {
+              *totalTime += execute(quantum,states->readys->front);
+              printf("\nProceso terminando ejecucion en tiempo: %i\n\n",*totalTime);
+              temp = find_pcb(states->readys->front->pid,ctrl->front);
+              temp->state = ID_LIS;
+              changer(states->sleeping,temp,states);
+              temp->state = ID_DOR;
+            }
+            else
+            {
+              do
+              {
+                if(val_nextZC(states->readys))
+                {
+                  printf("Intentando acceder al recurso: %s...\n", states->readys->front->critic_zones[states->readys->front->ncz[2]].resource->n);
+                  if(down( &states->readys->front->critic_zones[states->readys->front->ncz[2]].resource->sem, states->readys->inicio) != FAIL)
+                  execute_cz(quantum-tx)
+                }
+                tx++;
+              }while((tz != FAIL) && (tx < quantum));
+            }
+          }
+          else
+            tx = execute_cz(quantum);
+        }
+        else
+        {
+          printf("Proceso comenzando ejecución en tiempo: %i\n\n",*totalTime);
+          states->readys->front->state = ID_EJEC;
+          if(!states->readys->front->ncz[2].wr)
+          {
+            if(states->readys->front->tim[1] <= quantum)
+            {
+              *totalTime += execute(quantum,states->readys->front);
+              printf("\nProceso terminando ejecucion en tiempo: %i\n\n",*totalTime);
+              temp = find_pcb(states->readys->front->pid,ctrl->front);
+              temp->state = ID_LIS;
+              changer(states->sleeping,temp,states);
+              temp->state = ID_DOR;
+            }
+            else
+            {
+              *totalTime += execute(quantum,states->readys->front);
+              printf("\nProceso terminando ejecucion en tiempo: %i\n\n",*totalTime);
+              temp = states->readys->front;
+              temp->state = ID_LIS;
+              changer(states->waiting, states->readys->front, states);
+              temp->state = ID_ESP;
+            }
+
+          }
+
+        }
+        temp->first_exe = 1;
+      }
+      else
+      {
+
+      }
+    }
+    else
+    {
+      printf("\n");
+      rr(states, ctrl, quantum, &totalTime);
+    }
+  }
+  else printf("%s\n",EMPTY_FAIL);
 }
 
 /*Muestra los procesos existentes de acuerdo a su momento

@@ -5,10 +5,12 @@ int create_critic_zone(pcb *aux,resourcesCtrl *ctrlR);
 int check_zc(int ncz, int i, int duration, zc *aux);
 void show_zc(zc *aux, int elm);
 int val_nextZC(pcb *aux);
+int execute_cz(int t,pcb *readys);
 
 int create_critic_zone(pcb *aux,resourcesCtrl *ctrlR)
 {
   int nz,v,start,end,flag = 0;
+
   char str[45];
   if((nz = set_int("las zonas criticas del proceso",0)) > 0)
   {
@@ -51,6 +53,7 @@ int create_critic_zone(pcb *aux,resourcesCtrl *ctrlR)
             {
               if(set_resource(ctrlR,&aux) != FAIL)
               {
+                aux->critic_zones[i].wr = 0;
                 aux->critic_zones[i].dif = aux->critic_zones[i].end - aux->critic_zones.start;
                 i++;
               }
@@ -78,15 +81,15 @@ int create_critic_zone(pcb *aux,resourcesCtrl *ctrlR)
 Esta función valida las zc*/
 int check_zc(int ncz, int i, int duration, zc *critic_zones)
 {
-  if( critic_zones[i].fin == duration ) //Verificando si el tiempo final del elemento es igual a total.
+  if( critic_zones[i].fin == duration ) //Verificando si el t final del elemento es igual a total.
     if(i < ncz - 1) //Verificando que no sobren zc
       i = FATAL_FAIL;  //flagdera de que sobraron zc
 
   if(i != FATAL_FAIL)
-    if( critic_zones[i].fin <= duration ) //Verificando el tiempo máximo
-      if(critic_zones[i].inicio < critic_zones[i].fin) //Verificando que el inicio sea menor al final
+    if( critic_zones[i].fin <= duration ) //Verificando el t máximo
+      if(critic_zones[i].front < critic_zones[i].fin) //Verificando que el front sea menor al final
         if(i > 0)  //Si hay más de una zc creada
-          if( critic_zones[i - 1].inicio < critic_zones[i].inicio )
+          if( critic_zones[i - 1].front < critic_zones[i].front )
             if( critic_zones[i - 1].fin > critic_zones[i].fin )
               i = FAIL;
           else
@@ -111,7 +114,7 @@ void show_zc(zc *aux, int elm)
     int i;
 
     for(i = 0; i < elm; i++)
-      printf("%d | %d | %d |\n", i+1 , aux[i].inicio, aux[i].fin);
+      printf("%d | %d | %d |\n", i+1 , aux[i].front, aux[i].fin);
   }
   else
     printf("%7s | %7s | %8s |\n", "-", "-", "-");
@@ -121,26 +124,25 @@ void show_zc(zc *aux, int elm)
 int val_nextZC(pcb *aux)
 {
   int flag = 0;
-  if(aux->tiempo[2] == aux->critic_zones[ aux->nzc[2] ].start)
+  if(aux->t[2] == aux->critic_zones[ aux->nzc[2] ].start)
     flag = FAIL;
 
   return flag;
 }
 
-
-int ej_zc(int tiempo)
+int execute_cz(int t,pcb *readys)
 {
-    if(ejecList->inicio->map_zc[ ejecList->inicio->tot_zc[2] ].temp_real > tiempo)
-      ejecList->inicio->map_zc[ ejecList->inicio->tot_zc[2] ].temp_real -= tiempo;
+    if(readys->front->critic_zones[ readys->front->nzc[2] ].dif > t)
+      readys->front->critic_zones[ readys->front->nzc[2] ].dif -= t;
     else
     {
       printf("Liberando recurso...\n");
-      tiempo = ejecList->inicio->map_zc[ ejecList->inicio->tot_zc[2] ].temp_real;
-      ejecList->inicio->map_zc[ ejecList->inicio->tot_zc[2] ].temp_real = 0;
-      inc_sem( &ejecList->inicio->map_zc[ ejecList->inicio->tot_zc[2] ].recurso->sem );
-      ejecList->inicio->tot_zc[1]--;
-      ejecList->inicio->tot_zc[2]++;
+      t = readys->front->critic_zones[ readys->front->nzc[2] ].dif;
+      readys->front->critic_zones[ readys->front->nzc[2] ].dif = 0;
+      up( &readys->front->critic_zones[ readys->front->nzc[2] ].recurso->sem );
+      readys->front->nzc[1]--;
+      readys->front->nzc[2]++;
       printf("Recurso liberado.\n");
     }
-  return tiempo;
+  return t;
 }
