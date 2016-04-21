@@ -15,14 +15,16 @@ void print_options(int t)
   {
     case 0:
       printf("%s una accion.\n",SELEC);
-      printf("(1) Crear grupo.\n");
-      printf("(2) Crear usuario.\n");
-      printf("(3) Crear proceso.\n");
-      printf("(4) Cambiar el estado de un proceso.\n");
-      printf("(5) Mostrar.\n");
-      printf("(6) Ejecutar.\n");
-      printf("(7) Eliminar.\n");
-      printf("(8) Salir.\n");
+      printf("(1) Crear recurso\n");
+      printf("(2) Añadir recursos\n");
+      printf("(3) Crear grupo.\n");
+      printf("(4) Crear usuario.\n");
+      printf("(5) Crear proceso.\n");
+      printf("(6) Cambiar el estado de un proceso.\n");
+      printf("(7) Mostrar.\n");
+      printf("(8) Ejecutar.\n");
+      printf("(9) Eliminar.\n");
+      printf("(10) Salir.\n");
       break;
     case 1:
       printf("%s como desea ver los procesos.\n",SELEC);
@@ -47,9 +49,10 @@ void print_options(int t)
       printf("%s\n","========================================");
       break;
     case 3:
-      printf("(1) Grupos existentes.\n");
-      printf("(2) Usuarios existentes.\n");
-      printf("(3) Procesos existentes\n");
+      printf("(1) Recursos existentes.\n");
+      printf("(2) Grupos existentes.\n");
+      printf("(3) Usuarios existentes.\n");
+      printf("(4) Procesos existentes\n");
       break;
     default:
       printf("No hay opciones asignadas.\n");

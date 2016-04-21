@@ -8,9 +8,11 @@ struct pcb_p
   int pid; //Identificador de proceso
   int tim[3];//Tiempo que necesita para ejecutarse, total,restante, consumido
   int gen;//Variable para indicar si un nodo es frente, fondo o un nodo intermedio.
-  int first_exe;
+  int first_exe;//Variable para verificar el no. de ejecucion del proceso.
   struct users_p *user; //Usuario
   struct groups_p *group; //Grupo
+  int nzc[3];//Zonas criticas que necesita para ejecutarse, total,restantes, consumidas
+  struct cz_p *critic_zones;//Arreglo de znas criticas.
 
   struct pcbMov_p *sense;// Variable para indicar anterior y siguiente de cada elemento segun su Momento de llegada
   struct pcbMov_p *stateSense;// Variable para indicar anterior y siguiente de cada elemento segun su estado.
