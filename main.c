@@ -10,6 +10,9 @@
 #include "pcb.h"
 #include "groups.h"
 #include "users.h"
+#include "resources.h"
+#include "criticzones.h"
+#include "semaphores.h"
 
 typedef struct pcb_p pcb;
 typedef struct pcbMov_p pcbMov;
@@ -24,10 +27,17 @@ typedef struct users_p users;
 typedef struct usersMov_p usersMov;
 typedef struct usersCtrl_p usersCtrl;
 
+typedef struct resources_p resources;
+typedef struct semaphore_p semaphore;
+typedef struct cz_p cz;
+
 
 #include "statics.c"
 #include "groups.c"
 #include "users.c"
+#include "semaphores.c"
+#include "resources.c"
+#include "criticzones.c"
 #include "pcb.c"
 
 
@@ -43,11 +53,16 @@ int main()
   pcbStates *states;
   groupsCtrl *ctrlG;
   usersCtrl *ctrlU;
+  resourcesCtrl *ctrlR;
+
+  ctrlR = malloc(sizeof(resourcesCtrl));
+
   ctrl = malloc(sizeof(pcbCtrl));
   states = malloc(sizeof(pcbStates));
   states->readys = malloc(sizeof(pcbCtrl));
   states->waiting = malloc(sizeof(pcbCtrl));
   states->sleeping = malloc(sizeof(pcbCtrl));
+
   ctrlG = malloc(sizeof(groupsCtrl));
   ctrlU = malloc(sizeof(usersCtrl));
 
@@ -68,40 +83,47 @@ int main()
       switch(op)
       {
         case 1:
-        printf("\n");
-          create_group(ctrlG);
+          printf("\n");
+          create_resource(ctrlR);
           break;
         case 2:
-        printf("\n");
-          create_user(ctrlU);
+          //add res
           break;
         case 3:
-        printf("\n");
+          printf("\n");
+          create_group(ctrlG);
+          break;
+        case 4:
+          printf("\n");
+          create_user(ctrlU);
+          break;
+        case 5:
+          printf("\n");
           create_process(cpp,ctrl,states,ctrlG,ctrlU);
           cpp++;
           break;
-        case 4:
-        printf("\n");
+        case 6:
+          printf("\n");
           state_change(ctrl,states);
           break;
-        case 5:
-        printf("\n");
+        case 7:
+          printf("\n");
           show_everything(ctrl,states,ctrlG,ctrlU);
           break;
-        case 6:
-        printf("\n");
+        case 8:
+          printf("\n");
           rr(states, ctrl, quantum, &totalTime);
           break;
-        case 7:
-        printf("\n");
+        case 9:
+          printf("\n");
           del_option(ctrl,states,ctrlG,ctrlU);
           break;
-        case 8:
+        case 10:
           break;
         default:
           printf("Opcion invalida, vuelva a intentarlo.\n");
       }
-    }while(op != 8);
+    }while(op != 10);
 
     if(ctrl->front != NULL)
     {
@@ -124,12 +146,21 @@ int main()
       free(aux);
     }
 
+    if(ctrlR->front != NULL)
+    {
+      resources *aux = ctrlR->front;
+      while( next_resource(&aux,ctrlR->front) != FAIL )
+      free(aux);
+    }
+
     free(ctrl->front);
     free(ctrlG->front);
     free(ctrlU->front);
+    free(ctrlR->front);
     free(ctrl);
     free(ctrlG);
     free(ctrlU);
+    free(ctrlR);
   }
 
   return 0;

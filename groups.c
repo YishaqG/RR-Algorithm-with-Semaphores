@@ -351,7 +351,7 @@ int repeat_names(groups *front,char *name)
 int check_name(groups *front,char*n)
 {
 
-  int aux,flag = 0;
+  int flag = 0;
   do
   {
     printf("Ingrese el nombre del nuevo grupo: \n");

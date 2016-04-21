@@ -34,6 +34,7 @@ pcb* create_pcb_mem()
   temp->groupSense = (pcbMov *)malloc(sizeof(pcbMov *));
   temp->userSense = (pcbMov *)malloc(sizeof(pcbMov *));
 
+
   temp->group = (groups *)malloc(sizeof(groups *));
   temp->user = (users *)malloc(sizeof(users *));
 
@@ -59,6 +60,9 @@ pcb* create_pcb_mem()
   temp->tim[0] = -1;
   temp->tim[1] = -1;
   temp->tim[2] = -1;
+  temp->nzc[0] = -1;
+  temp->ncz[1] = -1;
+  temp->ncz[2] = -1;
   temp->state = -1;
   temp->gen = 0;
 
@@ -200,7 +204,7 @@ pcb* find_pcb(int pid, pcb *front)
 }
 
 /*Evalua si el id de un proceso ha sido repetido y de ser
-asi pregunta por otro o cancela la creacion del proceso*/
+asi pregunta por otro o cancela la CANCEL_PCSS*/
 int set_pid(pcb *front)
 {
   int pid,flag = 0;
@@ -221,7 +225,7 @@ int set_pid(pcb *front)
     if(flag == FAIL)
     {
       printf("%s\n",REP_FAIL);
-      if(cancel("creacion del proceso") == 0)
+      if(cancel("CANCEL_PCSS") == 0)
         pid = set_pid(front);
       else
         pid = FAIL;
@@ -259,95 +263,30 @@ void create_process(int cpp,pcbCtrl *ctrl, pcbStates *states, groupsCtrl *ctrlG,
               ctrl->front = create_pcb_mem();//se asigna la memoria para el proceso
               if(ctrl->front != NULL)
               {
-                /*Asignacion de los campos al nuevo proceso*/
-                printf("\nAsignando informacion al proceso...\n");
-                ctrl->front->cp = cpp;
-                ctrl->front->state = ID_LIS;
-                ctrl->front->pid = p[0];
-                ctrl->front->tim[0] = p[1];
-                ctrl->front->tim[1] = p[1];
-                ctrl->front->tim[2] = 0;
-                ctrl->front->gen = -1;
-                ctrl->front->user = u;
-                ctrl->front->group = g;
-
-                /*asignación del proceso a la lista de
-                procesos del grupo correspondiente*/
-                printf("Ligando proceso con su grupo...\n");
-                g->pcbG->front = ctrl->front;
-                g->pcbG->rear = g->pcbG->front;
-                g->pcbG->rear->groupSense->prev = g->pcbG->front;
-                g->pcbG->front->groupSense->prev = g->pcbG->rear;
-                g->pcbG->front->groupSense->next = g->pcbG->rear;
-                g->pcbG->rear->groupSense->next = g->pcbG->front;
-
-                /*asignación del proceso a la lista de
-                procesos del usuario correspondiente*/
-                printf("Ligando proceso con su usuario...\n");
-                u->pcbU->front = ctrl->front;
-                u->pcbU->rear = u->pcbU->front;
-                u->pcbU->rear->userSense->prev = u->pcbU->front;
-                u->pcbU->front->userSense->prev = u->pcbU->rear;
-                u->pcbU->front->userSense->next = u->pcbU->rear;
-                u->pcbU->rear->userSense->next = u->pcbU->front;
-
-                /*Se hace circular la lista que controla la pcb*/
-                ctrl->rear = ctrl->front; //Igualamos el frente y el fondo
-                ctrl->rear->sense->next = ctrl->front;
-                ctrl->rear->sense->prev = ctrl->front;
-                ctrl->front->sense->prev = ctrl->rear;
-                ctrl->front->sense->next = ctrl->rear;
-
-                /*Asignamos la lista de ejecucion */
-                printf("Encolando elemento a la lista de ejecucion...\n");
-                states->readys->front = ctrl->front;
-                states->readys->rear = states->readys->front;
-                states->readys->rear->stateSense->next = states->readys->front;
-                states->readys->rear->stateSense->prev = states->readys->front;
-                states->readys->front->sense->prev = states->readys->rear;
-                states->readys->front->stateSense->next = states->readys->rear;
-                printf("Proceso creado.\n");
-              }
-              else
-                printf("%s\n",MEM_FAIL);
-            }
-            else
-            {
-              ctrl->rear->sense->next = create_pcb_mem();//se asigna a memoria para el proceso
-              if(ctrl->rear->sense->next != NULL)//se verifica la creacion de la memoria
-              {
-                ctrl->rear->sense->next->sense->prev = ctrl->rear;
-                ctrl->rear = ctrl->rear->sense->next;
-                ctrl->rear->sense->next = ctrl->front;
-                ctrl->front->sense->prev = ctrl->rear;
-
-                printf("\nAsignando informacion al proceso...\n");
-                ctrl->rear->cp = cpp;
-                ctrl->rear->state = ID_LIS;
-                ctrl->rear->pid = p[0];
-                ctrl->rear->tim[0] = p[1];
-                ctrl->rear->tim[1] = p[1];
-                ctrl->rear->tim[2] = 0;
-                ctrl->rear->gen = 1;
-                ctrl->rear->user = u;
-                ctrl->rear->group = g;
-
-                if(ctrl->rear->sense->prev->gen != -1)
-                  ctrl->rear->sense->prev->gen = 0;
-
-                /*Asignación del proceso a la lista de
-                procesos del grupo correspondiente*/
-                /*En caso de que el grupo no tenga procesos
-                asignados  */
-                printf("Ligando proceso con su grupo...\n");
-                if(g->pcbG->front == NULL)
+                if(create_critic_zone(ctrl->front,ctrlR) != FAIL)
                 {
-                  g->pcbG->front = ctrl->rear;
+                  /*Asignacion de los campos al nuevo proceso*/
+                  printf("\nAsignando informacion al proceso...\n");
+                  ctrl->front->cp = cpp;
+                  ctrl->front->state = ID_LIS;
+                  ctrl->front->pid = p[0];
+                  ctrl->front->tim[0] = p[1];
+                  ctrl->front->tim[1] = p[1];
+                  ctrl->front->tim[2] = 0;
+                  ctrl->front->gen = -1;
+                  ctrl->front->user = u;
+                  ctrl->front->group = g;
+
+                  /*asignación del proceso a la lista de
+                  procesos del grupo correspondiente*/
+                  printf("Ligando proceso con su grupo...\n");
+                  g->pcbG->front = ctrl->front;
                   g->pcbG->rear = g->pcbG->front;
                   g->pcbG->rear->groupSense->prev = g->pcbG->front;
                   g->pcbG->front->groupSense->prev = g->pcbG->rear;
                   g->pcbG->front->groupSense->next = g->pcbG->rear;
                   g->pcbG->rear->groupSense->next = g->pcbG->front;
+<<<<<<< HEAD
                 }
                 /*Caso en el que ya existan procesos con el
                 grupo elegido*/
@@ -359,20 +298,19 @@ void create_process(int cpp,pcbCtrl *ctrl, pcbStates *states, groupsCtrl *ctrlG,
                   g->pcbG->rear->groupSense->next = g->pcbG->front;
                   g->pcbG->front->groupSense->prev = g->pcbG->rear;
                 }
+=======
+>>>>>>> e49d2034ab8ef06fe6fe5b986bdfb9e2eea22d34
 
-                /*Asignación del proceso a la lista de
-                procesos del usuario correspondiente*/
-                /*En caso de que el usuario no tenga procesos
-                asignados  */
-                printf("Ligando proceso con su usuario...\n");
-                if(u->pcbU->front == NULL)
-                {
-                  u->pcbU->front = ctrl->rear;
+                  /*asignación del proceso a la lista de
+                  procesos del usuario correspondiente*/
+                  printf("Ligando proceso con su usuario...\n");
+                  u->pcbU->front = ctrl->front;
                   u->pcbU->rear = u->pcbU->front;
                   u->pcbU->rear->userSense->prev = u->pcbU->front;
                   u->pcbU->front->userSense->prev = u->pcbU->rear;
                   u->pcbU->front->userSense->next = u->pcbU->rear;
                   u->pcbU->rear->userSense->next = u->pcbU->front;
+<<<<<<< HEAD
                 }
                 /*Caso en el que ya existan procesos con el
                 usuario elegido*/
@@ -384,26 +322,130 @@ void create_process(int cpp,pcbCtrl *ctrl, pcbStates *states, groupsCtrl *ctrlG,
                   u->pcbU->rear->userSense->next = u->pcbU->front;
                   u->pcbU->front->userSense->prev = u->pcbU->rear;
                 }
+=======
+>>>>>>> e49d2034ab8ef06fe6fe5b986bdfb9e2eea22d34
 
-                printf("Encolando elemento a la lista de ejecucion...\n");
-                if(states->readys->front == NULL)
-                {
-                  states->readys->front = ctrl->rear;
+                  /*Se hace circular la lista que controla la pcb*/
+                  ctrl->rear = ctrl->front; //Igualamos el frente y el fondo
+                  ctrl->rear->sense->next = ctrl->front;
+                  ctrl->rear->sense->prev = ctrl->front;
+                  ctrl->front->sense->prev = ctrl->rear;
+                  ctrl->front->sense->next = ctrl->rear;
+
+                  /*Asignamos la lista de ejecucion */
+                  printf("Encolando elemento a la lista de ejecucion...\n");
+                  states->readys->front = ctrl->front;
                   states->readys->rear = states->readys->front;
                   states->readys->rear->stateSense->next = states->readys->front;
                   states->readys->rear->stateSense->prev = states->readys->front;
                   states->readys->front->sense->prev = states->readys->rear;
                   states->readys->front->stateSense->next = states->readys->rear;
+                  printf("Proceso creado.\n");
                 }
                 else
+                  printf("Se ha cancelado la creacion del proceso debido a problemas con las zonas criticas.\n");
+              }
+              else
+                printf("%s\n",MEM_FAIL);
+            }
+            else
+            {
+              ctrl->rear->sense->next = create_pcb_mem();//se asigna a memoria para el proceso
+              if(ctrl->rear->sense->next != NULL)//se verifica la creacion de la memoria
+              {
+                if(create_critic_zone(ctrl->rear,ctrlR) != FAIL)
                 {
-                  states->readys->rear->stateSense->next = ctrl->rear;
-                  states->readys->rear->stateSense->next->stateSense->prev = states->readys->rear;
-                  states->readys->rear = states->readys->rear->stateSense->next;
-                  states->readys->rear->stateSense->next = states->readys->front;
-                  states->readys->front->stateSense->prev = states->readys->rear;
+                  ctrl->rear->sense->next->sense->prev = ctrl->rear;
+                  ctrl->rear = ctrl->rear->sense->next;
+                  ctrl->rear->sense->next = ctrl->front;
+                  ctrl->front->sense->prev = ctrl->rear;
+
+                  printf("\nAsignando informacion al proceso...\n");
+                  ctrl->rear->cp = cpp;
+                  ctrl->rear->state = ID_LIS;
+                  ctrl->rear->pid = p[0];
+                  ctrl->rear->tim[0] = p[1];
+                  ctrl->rear->tim[1] = p[1];
+                  ctrl->rear->tim[2] = 0;
+                  ctrl->rear->gen = 1;
+                  ctrl->rear->user = u;
+                  ctrl->rear->group = g;
+
+                  if(ctrl->rear->sense->prev->gen != -1)
+                  ctrl->rear->sense->prev->gen = 0;
+
+                  /*Asignación del proceso a la lista de
+                  procesos del grupo correspondiente*/
+                  /*En caso de que el grupo no tenga procesos
+                  asignados  */
+                  printf("Ligando proceso con su grupo...\n");
+                  if(g->pcbG->front == NULL)
+                  {
+                    g->pcbG->front = ctrl->rear;
+                    g->pcbG->rear = g->pcbG->front;
+                    g->pcbG->rear->groupSense->prev = g->pcbG->front;
+                    g->pcbG->front->groupSense->prev = g->pcbG->rear;
+                    g->pcbG->front->groupSense->next = g->pcbG->rear;
+                    g->pcbG->rear->groupSense->next = g->pcbG->front;
+                  }
+                  /*Caso en el que ya existan procesos con el
+                  grupo elegido*/
+                  else
+                  {
+                    g->pcbG->rear->groupSense->next = ctrl->rear;
+                    g->pcbG->rear->groupSense->next->groupSense->prev = ctrl->rear;
+                    g->pcbG->rear = g->pcbG->rear->groupSense->next;
+                    g->pcbG->rear->groupSense->next = g->pcbG->front;
+                    g->pcbG->front->groupSense->prev = g->pcbG->rear;
+                  }
+
+                  /*Asignación del proceso a la lista de
+                  procesos del usuario correspondiente*/
+                  /*En caso de que el usuario no tenga procesos
+                  asignados  */
+                  printf("Ligando proceso con su usuario...\n");
+                  if(u->pcbU->front == NULL)
+                  {
+                    u->pcbU->front = ctrl->rear;
+                    u->pcbU->rear = u->pcbU->front;
+                    u->pcbU->rear->userSense->prev = u->pcbU->front;
+                    u->pcbU->front->userSense->prev = u->pcbU->rear;
+                    u->pcbU->front->userSense->next = u->pcbU->rear;
+                    u->pcbU->rear->userSense->next = u->pcbU->front;
+                  }
+                  /*Caso en el que ya existan procesos con el
+                  usuario elegido*/
+                  else
+                  {
+                    u->pcbU->rear->userSense->next = ctrl->rear;
+                    u->pcbU->rear->userSense->next->userSense->prev = ctrl->rear;
+                    u->pcbU->rear = u->pcbU->rear->userSense->next;
+                    u->pcbU->rear->userSense->next = u->pcbU->front;
+                    u->pcbU->front->userSense->prev = u->pcbU->rear;
+                  }
+
+                  printf("Encolando elemento a la lista de ejecucion...\n");
+                  if(states->readys->front == NULL)
+                  {
+                    states->readys->front = ctrl->rear;
+                    states->readys->rear = states->readys->front;
+                    states->readys->rear->stateSense->next = states->readys->front;
+                    states->readys->rear->stateSense->prev = states->readys->front;
+                    states->readys->front->sense->prev = states->readys->rear;
+                    states->readys->front->stateSense->next = states->readys->rear;
+                  }
+                  else
+                  {
+                    states->readys->rear->stateSense->next = ctrl->rear;
+                    states->readys->front->stateSense->prev = ctrl->rear;
+                    states->readys->rear->stateSense->next->stateSense->prev = ctrl->rear;
+                    states->readys->rear = states->readys->rear->stateSense->next;
+                    states->readys->rear->stateSense->next = states->readys->front;
+                  }
+                  printf("Proceso creado.\n");
                 }
-                printf("Proceso creado.\n");
+                else
+                  printf("Se ha cancelado la creacion del proceso debido a problemas con las zonas criticas.\n");
               }
               else
               printf("%s\n",MEM_FAIL);
@@ -612,7 +654,7 @@ void show_everything(pcbCtrl *ctrl, pcbStates *states, groupsCtrl *ctrlG, usersC
   {
     printf("%s que desea ver\n",SELEC);
     print_options(3);
-    printf("(4) Cancelar.\n");
+    printf("(5) Cancelar.\n");
     printf("\n>");
     scanf("%i",&ch);
     getchar();
@@ -620,18 +662,22 @@ void show_everything(pcbCtrl *ctrl, pcbStates *states, groupsCtrl *ctrlG, usersC
     switch(ch)
     {
       case 1:
-      if(ctrlG->front != NULL)
-        show_groups(ctrlG);
-      else
-        printf("No hay grupos\n");
+        printf("\n");
+        show_resources(ctrlR);
         break;
       case 2:
+        if(ctrlG->front != NULL)
+          show_groups(ctrlG);
+        else
+          printf("No hay grupos\n");
+        break;
+      case 3:
         if(ctrlU->front != NULL)
           show_users(ctrlU);
         else
         printf("No hay usuarios\n");
         break;
-      case 3:
+      case 4:
         if(ctrl->front != NULL)
         {
           do
@@ -876,12 +922,12 @@ void show_everything(pcbCtrl *ctrl, pcbStates *states, groupsCtrl *ctrlG, usersC
         else
           printf("%s.\n",EMPTY_FAIL);
         break;
-      case 4:
+      case 5:
         break;
       default:
         printf("%s\n",DEFAULT_FAIL);
     }
-  }while(ch != 4);
+  }while(ch != 5);
 
 }
 

@@ -3,7 +3,7 @@
 
 //Tamaños maximos
 #define TAM_BUFF 20 //Tamaño para almacenar cadenas y posteriormente validarlas
-
+#define TAM_REC 5//
 /*Estados(ID, Nombre)*/
 #define ID_EJEC 1
 #define EJEC "Ejecutando"
@@ -25,6 +25,7 @@
 
 /*Mesajes de Error*/
 #define FAIL -1
+#define FATAL_FAIL -2
 #define EMPTY_FAIL "No hay procesos"
 #define MEM_FAIL "Error al asignar memoria."
 #define NUM0_FAIL "Error, debe ingresar un numero mayor o igual a 0"
@@ -35,5 +36,5 @@
 #define DEL_FAIL "Imposible eliminar elemento, proceso en ejecucion."
 #define REP_FAIL "El id y/o nombre que ha introducido ya existe(n)."
 #define DEFAULT_FAIL "Opcion no valida. Vuelva a intentar."
-
+#define CANCEL_PCSS "creacion del proceso."
 #endif
