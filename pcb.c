@@ -354,7 +354,7 @@ void create_process(int cpp,pcbCtrl *ctrl, pcbStates *states, groupsCtrl *ctrlG,
                 else
                 {
                   g->pcbG->rear->groupSense->next = ctrl->rear;
-                  g->pcbG->rear->groupSense->next->groupSense->prev = ctrl->rear;
+                  g->pcbG->rear->groupSense->next->groupSense->prev = g->pcbG->rear;
                   g->pcbG->rear = g->pcbG->rear->groupSense->next;
                   g->pcbG->rear->groupSense->next = g->pcbG->front;
                   g->pcbG->front->groupSense->prev = g->pcbG->rear;
@@ -379,7 +379,7 @@ void create_process(int cpp,pcbCtrl *ctrl, pcbStates *states, groupsCtrl *ctrlG,
                 else
                 {
                   u->pcbU->rear->userSense->next = ctrl->rear;
-                  u->pcbU->rear->userSense->next->userSense->prev = ctrl->rear;
+                  u->pcbU->rear->userSense->next->userSense->prev = u->pcbU->rear;
                   u->pcbU->rear = u->pcbU->rear->userSense->next;
                   u->pcbU->rear->userSense->next = u->pcbU->front;
                   u->pcbU->front->userSense->prev = u->pcbU->rear;
@@ -398,10 +398,10 @@ void create_process(int cpp,pcbCtrl *ctrl, pcbStates *states, groupsCtrl *ctrlG,
                 else
                 {
                   states->readys->rear->stateSense->next = ctrl->rear;
-                  states->readys->front->stateSense->prev = ctrl->rear;
-                  states->readys->rear->stateSense->next->stateSense->prev = ctrl->rear;
+                  states->readys->rear->stateSense->next->stateSense->prev = states->readys->rear;
                   states->readys->rear = states->readys->rear->stateSense->next;
                   states->readys->rear->stateSense->next = states->readys->front;
+                  states->readys->front->stateSense->prev = states->readys->rear;
                 }
                 printf("Proceso creado.\n");
               }
