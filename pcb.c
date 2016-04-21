@@ -286,17 +286,6 @@ void create_process(int cpp,pcbCtrl *ctrl, pcbStates *states, groupsCtrl *ctrlG,
                   g->pcbG->front->groupSense->prev = g->pcbG->rear;
                   g->pcbG->front->groupSense->next = g->pcbG->rear;
                   g->pcbG->rear->groupSense->next = g->pcbG->front;
-                }
-                /*Caso en el que ya existan procesos con el
-                grupo elegido*/
-                else
-                {
-                  g->pcbG->rear->groupSense->next = ctrl->rear;
-                  g->pcbG->rear->groupSense->next->groupSense->prev = g->pcbG->rear;
-                  g->pcbG->rear = g->pcbG->rear->groupSense->next;
-                  g->pcbG->rear->groupSense->next = g->pcbG->front;
-                  g->pcbG->front->groupSense->prev = g->pcbG->rear;
-                }
 
                   /*asignación del proceso a la lista de
                   procesos del usuario correspondiente*/
@@ -307,17 +296,6 @@ void create_process(int cpp,pcbCtrl *ctrl, pcbStates *states, groupsCtrl *ctrlG,
                   u->pcbU->front->userSense->prev = u->pcbU->rear;
                   u->pcbU->front->userSense->next = u->pcbU->rear;
                   u->pcbU->rear->userSense->next = u->pcbU->front;
-                }
-                /*Caso en el que ya existan procesos con el
-                usuario elegido*/
-                else
-                {
-                  u->pcbU->rear->userSense->next = ctrl->rear;
-                  u->pcbU->rear->userSense->next->userSense->prev = u->pcbU->rear;
-                  u->pcbU->rear = u->pcbU->rear->userSense->next;
-                  u->pcbU->rear->userSense->next = u->pcbU->front;
-                  u->pcbU->front->userSense->prev = u->pcbU->rear;
-                }
 
                   /*Se hace circular la lista que controla la pcb*/
                   ctrl->rear = ctrl->front; //Igualamos el frente y el fondo
@@ -619,6 +597,7 @@ int execute(int t,pcb *exec)
 /*Algoritmo de despacho RR con uso de recursos manejados por semáforos*/
 void rr_sem(resourcesCtrl *ctrlR,pcbStates *states, pcbCtrl *ctrl, int quantum, int *totalTime)
 {
+  int tx = 0;
   pcb *temp,*f = states->readys->front;
   if(states->readys->front != NULL)
   {
@@ -693,8 +672,66 @@ void rr_sem(resourcesCtrl *ctrlR,pcbStates *states, pcbCtrl *ctrl, int quantum, 
       }
       else
       {
-
+        if(states->readys->front == states->readys->rear)
+        {
+          printf("Proceso comenzando ejecución en tiempo: %i\n\n",*totalTime);
+          states->readys->front->state = ID_EJEC;
+          if(!states->readys->front->ncz[2].wr)
+          {
+            if(states->readys->front->tim[1] <= quantum)
+            {
+              *totalTime += execute(states->readys->front->tim[1],states->readys->front);
+              printf("Proceso terminando ejecucion en tiempo: %i\n\n",*totalTime);
+              temp = states->readys->front;
+              temp->state = ID_LIS;
+              changer(states->sleeping,temp,states);
+              temp->state = ID_DOR;
+            }
+            else
+            {
+              do
+              {
+                if(val_nextZC(states->readys))
+                {
+                  printf("Intentando acceder al recurso: %s...\n", states->readys->front->critic_zones[states->readys->front->ncz[2]].resource->n);
+                  if(down( &states->readys->front->critic_zones[states->readys->front->ncz[2]].resource->sem, states->readys->inicio) != FAIL)
+                  execute_cz(quantum-tx)
+                }
+                tx++;
+              }while((tz != FAIL) && (tx < quantum));
+            }
+          }
+          tx = execute_cz(quantum);
+        }
+        else
+        {
+          printf("Proceso comenzando ejecución en tiempo: %i\n\n",*totalTime);
+          states->readys->front->state = ID_EJEC;
+          if(states->readys->front->tim[1] <= quantum)
+          {
+            *totalTime += execute(states->readys->front->tim[1],states->readys->front);
+            printf("Proceso terminando ejecucion en tiempo: %i\n\n",*totalTime);
+            temp = states->readys->front;
+            temp->state = ID_LIS;
+            changer(states->sleeping,temp,states);
+            temp->state = ID_DOR;
+          }
+          else
+          {
+            do
+            {
+              if(val_nextZC(states->readys))
+              {
+                printf("Intentando acceder al recurso: %s...\n", states->readys->front->critic_zones[states->readys->front->ncz[2]].resource->n);
+                if(down( &states->readys->front->critic_zones[states->readys->front->ncz[2]].resource->sem, states->readys->inicio) != FAIL)
+                execute_cz(quantum-tx)
+              }
+              tx++;
+            }while((tz != FAIL) && (tx < quantum));
+          }
+        }
       }
+
     }
     else
     {
@@ -726,7 +763,7 @@ void show_pcb(pcbCtrl *ctrl)
 ver, puede ser por estado, grupo, usuario, o momento de
 llegada y además da la opcion de mostrarlo desde el inicio
 de la lista seleccionada o desde su fin*/
-void show_everything(pcbCtrl *ctrl, pcbStates *states, groupsCtrl *ctrlG, usersCtrl *ctrlU)
+void show_everything(pcbCtrl *ctrl, pcbStates *states, groupsCtrl *ctrlG, usersCtrl *ctrlU,resourcesCtrl *ctrlR)
 {
   int ch,what, how;
   users *user;
@@ -1240,7 +1277,7 @@ void state_change(pcbCtrl *ctrl, pcbStates *states)
 /*0_state_change*/
 
 /*1_changer Esta funcion cambia un proceso de una lista a otra*/
-void changer(pcbCtrl *lista, pcb *elm, pcbStates *states, int mode)
+void changer(pcbCtrl *lista, pcb *elm, pcbStates *states)
 {
   int flag = 0;
   //1_Eliminaion del estado en su lista de estado previo
@@ -1313,38 +1350,21 @@ void changer(pcbCtrl *lista, pcb *elm, pcbStates *states, int mode)
   //0_Eliminaion del estado en su lista de estado previo
 
   //Adicion del elemento a la nueva lista
-  if(mode == CHANG_STATES)
-    if(lista->front != NULL)
-    {
-      elm->stateSense->next = lista->front;
-      elm->stateSense->prev = lista->rear;
-      lista->front->stateSense->prev = elm;
-      lista->rear->stateSense->next = elm;
-      lista->rear = elm;
-    }
-    else
-    {
-      lista->front = elm;
-      lista->rear = elm;
-      elm->stateSense->next = elm;
-      elm->stateSense->prev = elm;
-    }
-  else  //CHANG_SEM
-    if(lista->front != NULL)
-    {
-      elm->semSense->next = lista->front;
-      elm->semSense->prev = lista->rear;
-      lista->front->semSense->prev = elm;
-      lista->rear->semSense->next = elm;
-      lista->rear = elm;
-    }
-    else
-    {
-      lista->front = elm;
-      lista->rear = elm;
-      elm->semSense->next = elm;
-      elm->semSense->prev = elm;
-    }
+  if(lista->front != NULL)
+  {
+    elm->stateSense->next = lista->front;
+    elm->stateSense->prev = lista->rear;
+    lista->front->stateSense->prev = elm;
+    lista->rear->stateSense->next = elm;
+    lista->rear = elm;
+  }
+  else
+  {
+    lista->front = elm;
+    lista->rear = elm;
+    elm->stateSense->next = elm;
+    elm->stateSense->prev = elm;
+  }
 }
 /*1_changer*/
 
@@ -1407,5 +1427,7 @@ void del_option(pcbCtrl *ctrl, pcbStates *states, groupsCtrl *gp, usersCtrl *us)
   }while( ban == 0 );
 }
 /*0_del_options*/
+
+/*1_*/
 
 /**/

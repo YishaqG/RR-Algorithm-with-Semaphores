@@ -309,7 +309,7 @@ int set_group(groups **g, groupsCtrl *ctrlG)
     scanf("%i",&gid);
     getchar();
 
-    *g = find_group(gid,ctrlG->front);
+    g = find_group(gid,ctrlG->front);
     if(g != NULL)
       break;
     else
@@ -320,6 +320,8 @@ int set_group(groups **g, groupsCtrl *ctrlG)
         flag = FAIL;
         break;
       }
+      else
+        flag = set_group(&g,ctrlG);
     }
   }while(1);
 

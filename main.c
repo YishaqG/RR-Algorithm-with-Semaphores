@@ -10,9 +10,9 @@
 #include "pcb.h"
 #include "groups.h"
 #include "users.h"
+#include "semaphores.h"
 #include "resources.h"
 #include "criticzones.h"
-#include "semaphores.h"
 
 typedef struct pcb_p pcb;
 typedef struct pcbMov_p pcbMov;
@@ -28,6 +28,8 @@ typedef struct usersMov_p usersMov;
 typedef struct usersCtrl_p usersCtrl;
 
 typedef struct resources_p resources;
+typedef struct resourcesCtrl_p resourcesCtrl;
+typedef struct resourcesMov_p resourcesMov;
 typedef struct semaphore_p semaphore;
 typedef struct cz_p cz;
 
@@ -108,7 +110,7 @@ int main()
           break;
         case 7:
           printf("\n");
-          show_everything(ctrl,states,ctrlG,ctrlU);
+          show_everything(ctrl,states,ctrlG,ctrlU,ctrlR);
           break;
         case 8:
           printf("\n");

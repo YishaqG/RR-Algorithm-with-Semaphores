@@ -18,6 +18,7 @@ struct pcb_p
   struct pcbMov_p *stateSense;// Variable para indicar anterior y siguiente de cada elemento segun su estado.
   struct pcbMov_p *groupSense;// Variable para indicar anterior y siguiente de cada elemento segun su grupo.
   struct pcbMov_p *userSense;// Variable para indicar anterior y siguiente de cada elemento segun su usuario.
+  struct pcbMov_p *semSense;
 };
 
 /*Estructura para controlar los nodos anteriores y siguientes de cada nodo*/

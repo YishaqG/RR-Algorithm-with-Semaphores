@@ -17,7 +17,7 @@ int val_res(semaphore *aux)
   {
     printf("Error al intentar acceder al recurso.\n");
     printf("Recursos agotados.\n");
-    ban = ERROR;
+    ban = FAIL;
   }
   else
     ban = aux->cant[1];
@@ -29,20 +29,20 @@ int val_res(semaphore *aux)
 /*0_solic_rec*/
 
 /*1_add_pcsSQ
-Esta función agrega un elemento a la lista ade bloqueados del semaphore*/
+Esta función agrega un elemento a la lista ade bloqueados del semaphore
 void block_pcss(semaphore *aux, pcb *elm)
 {
   /*1_Refront variables*/
-  elm->colaLis->front = NULL;
-  elm->colaLis->prev = NULL;
+  //elm->state->front = NULL;
+//  elm->state->prev = NULL;
   /*0_Refront variables*/
-
+/*
   if(aux->blocked->front == NULL) //Formando
-    aux->blocked->fin = aux->blocked->front = elm;
+    aux->blocked->rear = aux->blocked->front = elm;
   else
   {
-      aux->blocked->fin->colaLis->next = elm; //Elemento anterior
-      aux->blocked->fin = aux->blocked->fin->colaLis->next;  //Elemento siguiete
+      aux->blocked->rear->state->next = elm; //Elemento anterior
+      aux->blocked->rear = aux->blocked->rear->state->next;  //Elemento siguiete
   }
 
   aux = NULL;
@@ -56,8 +56,8 @@ void up(semaphore *elm)
   if(elm->blocked != NULL)
   {
     asig_EjecList(elm->blocked->front);
-    if(elm->blocked->front->colaLis->next != NULL)
-      elm->blocked->front = elm->blocked->front->colaLis->next;
+    if(elm->blocked->front->semSense->next != NULL)
+      elm->blocked->front = elm->blocked->front->semSense->next;
     else
       elm->blocked->front = NULL;
   }
@@ -76,7 +76,7 @@ Retorna FAIL si el proceso es bloqueado*/
 int down(semaphore *elm, pcb*aux)
 {
   int ban = 0;
-  if(solic_rec(elm) != ERROR)
+    if(solic_rec(elm) != FAIL)
   {
     elm->cant[1]--;
     elm->cant[2]++;
@@ -88,7 +88,7 @@ int down(semaphore *elm, pcb*aux)
     add_pcsSQ(elm, aux);
     elmPcs_QLis(aux);
     printf("Proceso bloqueado.\n");
-    ban = ERROR;
+    ban = FAIL;
   }
   elm = NULL;
   aux = NULL;

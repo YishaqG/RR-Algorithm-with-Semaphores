@@ -185,6 +185,11 @@ int set_int(char what[],int flag)
         temp = FAIL;
         break;
       }
+      else
+      {
+        temp = set_int(what,flag);
+        break;
+      }
     }
   }while(1);
 
@@ -203,10 +208,13 @@ int set_name(char *name, char what[])
     if(strlen(name) > TAM_BUFF)
     {
       if(cancel("creacion del grupo") == 1)
-        break;
-      else
       {
         flag = FAIL;
+        break;
+      }
+      else
+      {
+        flag = set_name(name, what);
         break;
       }
     }

@@ -20,12 +20,12 @@ resources* create_resourse_mem()
   resources *temp;
   temp = (resources *)malloc(sizeof(resources));
 
-  temp = (semaphore *)malloc(sizeof(semaphore));
-  temp->sem->blocked =(pcbCtl *)malloc(sizeof(pcbCtrl));
+  temp->sem = (semaphore *)malloc(sizeof(semaphore));
+  temp->sem->blocked =(pcbCtrl *)malloc(sizeof(pcbCtrl));
   temp->sem->blocked->front = NULL;
   temp->sem->blocked->rear = NULL;
   temp->resourSense->next = NULL;
-  temp->resourSense->rear = NULL;
+  temp->resourSense->prev = NULL;
   temp->id = -1;
   strcpy(temp->n," ");
 
@@ -36,10 +36,10 @@ resources* create_resourse_mem()
 int next_resource(resources **aux,resources *f)
 {
   int b = 0;
-  if(((**aux).resourSense->next != NULL) || (**aux).resourSense->next != f))
-    *aux = (**aux).resourSense->next; //Desplazamiento al siguiente elemento
+  if(((**aux).resourSense->next == NULL) || ((**aux).resourSense->next == f))
+    b = FAIL;
   else
-    b = ERROR;
+    *aux = (**aux).resourSense->next; //Desplazamiento al siguiente elemento
 
   return b;
 }
@@ -49,10 +49,10 @@ int next_resource(resources **aux,resources *f)
 int prev_resource(resources **aux,resources *r)
 {
   int b = 0;
-  if(((**aux).resourSense->prev != NULL) || (**aux).resourSense->prev != r))
-    *aux = (**aux).resourSense->prev; //Desplazamiento al siguiente elemento
+  if((**aux).resourSense->prev == r)
+    b = FAIL;
   else
-    b = ERROR;
+    *aux = (**aux).resourSense->prev; //Desplazamiento al siguiente elemento
 
   return b;
 }
@@ -71,7 +71,7 @@ int set_idR(resources *front)
     idR = set_int("el id del nuevo usuario",0);
     do
     {
-      if(idR == f->idR)
+      if(idR == f->id)
       {
         flag = FAIL;
         break;
@@ -122,9 +122,7 @@ int check_resource(resources *front,char*name)
       else
       {
         printf("%s\n",REP_FAIL);
-        printf("Si desea añadir una instancia a un
-        recurso existente, porfavor vaya al menu
-        principal\n", );
+        printf("Si desea añadir una instancia a un recurso existente, porfavor vaya al menu principal\n");
         if(cancel("creacion del recurso") == 0)
         {
           check_resource(front,name);
@@ -152,7 +150,7 @@ void create_resource(resourcesCtrl *ctrlR)
 {
   int id;
   char *name = create_string_mem(TAM_BUFF); //Variable temporal para validar longitud del nombre
-  int nSem; //Variable temporal para validar el num de recursos del tipo.
+  int nsem; //Variable temporal para validar el num de recursos del tipo.
 
   if((id = set_idR(ctrlR->front)) > 0)
   {

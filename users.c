@@ -324,6 +324,8 @@ int set_user(users **u,usersCtrl *ctrlU)
         flag = FAIL;
         break;
       }
+      else
+        flag = set_user(&u,ctrlU)
     }
   }while(1);
 
