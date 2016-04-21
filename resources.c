@@ -269,9 +269,11 @@ resources* find_resource(int id, resources *front)
 /*0_eliminar_recurso*/
 void delete_resource(resourcesCtrl *ctrlR)
 {
-  int op;
-  resources *x;
-  x = show_resources();
+  int op, id_res;
+  printf("%s\n el recurso que desea elegir:\n", SELEC);
+  show_resources();
+  scanf("%i", &id_res);
+  resources *x = find_resource(id_res, ctrlR->front);
   if(x != NULL){
     printf("Elija una opcion para continuar:\n");
     printf("\t(1) Disminuir instancias de recurso.\n");
@@ -280,7 +282,8 @@ void delete_resource(resourcesCtrl *ctrlR)
     getchar();
     switch(op){
       case 1:
-        if((x->sem.cant[1] == x->sem.cant[0]) || (x->sem.cant[1] == x->sem.cant[0])){
+        if( (x->sem.cant[2] == 0 )
+        {
           x->sem.cant[0]--;
           x->sem.cant[1]--;
         }
@@ -288,13 +291,28 @@ void delete_resource(resourcesCtrl *ctrlR)
           printf("Hay %d instancias de %s ocupadas, imposible eliminar resource.\n",x->sem.cant[2],x->n);
         break;
       case 2:
-        if(x->sem.cant[0] == x->sem.cant[1]){
-          resources *ant;
-          ant = ctrlR->front;
-          while((ant->sig != NULL) && (ant->sig != x)){
-            ant = ant->sig;
-          }
-          ant->sig = x->sig;
+        if(x->sem.cant[2] == 0)
+        {
+          if(ctrlR->front == ctrlR->rear)
+            ctrlR->rear = ctrlR->front = NULL;
+          else
+            if(ctrlR->front == x)
+            {
+              ctrlR->front = ctrlR->front->resourSense->next;
+              ctrlR->front->resourSense->prev = ctrlR->rear;
+            }
+            else
+              if(ctrlR->rear == x)
+              {
+                ctrlR->rear = ctrlR->rear->resourSense->prev;
+                ctrlR->front->resourSense->prev = ctrlR->rear;
+              }
+              else
+              {
+                x->resourSense->next->resourSense->prev = x->resourSense->prev;
+                x->resourSense->prev->resourSense->next = x->resourSense->next;
+              }
+
           free(x);
         }
         else
@@ -333,48 +351,8 @@ int set_resource(resourcesCtrl *ctrlR,pcb **aux)
         flag = FAIL;
         break;
       }
-      else      
+      else
         flag = set_resource(ctrlR,*aux);
     }
   }while(1);
 }
-
-/*0_ show_Srecursos*/
-void show_Tresourcess()
-{
-  int t;
-  int i = 0;
-  resources *aux = ctrlR->front; //'aux'(Recorrer la lista de recursos)
-  imp_enc(ENC_REC_T);
-  do
-  {
-    if( t != ERROR){
-      printf("%6s|%14s|%7d\n", aux->id, aux->n,aux->sem.cant[0]); //Imprime los elementos de la lista
-      i++;  //Contador de elementos impresos, además de sirve para validar
-      t = sig_recurso(&aux);
-    }
-    else  //Caso contrario terminar el ciclo
-    break;
-  }while(1);
-}
-/*1_ show_Trecursos*/
-
-/*0_ show_Srecursos*/
-void show_Sresourcess()
-{
-  int t;
-  int i = 0;
-  resources *aux = ctrlR->front; //'aux'(Recorrer la lista de recursos)
-  imp_enc(ENC_REC_T);
-  do
-  {
-    if( t != ERROR){
-      printf("%6s|%14s|%7d\n", aux->id, aux->n,aux->sem.cant[1]); //Imprime los elementos de la lista
-      i++;  //Contador de elementos impresos, además de sirve para validar
-      t = next_resource(&aux);
-    }
-    else  //Caso contrario terminar el ciclo
-    break;
-  }while(1);
-}
-/*1_ show_Srecursos*/
