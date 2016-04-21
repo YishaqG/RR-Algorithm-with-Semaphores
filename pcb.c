@@ -286,7 +286,6 @@ void create_process(int cpp,pcbCtrl *ctrl, pcbStates *states, groupsCtrl *ctrlG,
                   g->pcbG->front->groupSense->prev = g->pcbG->rear;
                   g->pcbG->front->groupSense->next = g->pcbG->rear;
                   g->pcbG->rear->groupSense->next = g->pcbG->front;
-<<<<<<< HEAD
                 }
                 /*Caso en el que ya existan procesos con el
                 grupo elegido*/
@@ -298,8 +297,6 @@ void create_process(int cpp,pcbCtrl *ctrl, pcbStates *states, groupsCtrl *ctrlG,
                   g->pcbG->rear->groupSense->next = g->pcbG->front;
                   g->pcbG->front->groupSense->prev = g->pcbG->rear;
                 }
-=======
->>>>>>> e49d2034ab8ef06fe6fe5b986bdfb9e2eea22d34
 
                   /*asignación del proceso a la lista de
                   procesos del usuario correspondiente*/
@@ -310,7 +307,6 @@ void create_process(int cpp,pcbCtrl *ctrl, pcbStates *states, groupsCtrl *ctrlG,
                   u->pcbU->front->userSense->prev = u->pcbU->rear;
                   u->pcbU->front->userSense->next = u->pcbU->rear;
                   u->pcbU->rear->userSense->next = u->pcbU->front;
-<<<<<<< HEAD
                 }
                 /*Caso en el que ya existan procesos con el
                 usuario elegido*/
@@ -322,8 +318,6 @@ void create_process(int cpp,pcbCtrl *ctrl, pcbStates *states, groupsCtrl *ctrlG,
                   u->pcbU->rear->userSense->next = u->pcbU->front;
                   u->pcbU->front->userSense->prev = u->pcbU->rear;
                 }
-=======
->>>>>>> e49d2034ab8ef06fe6fe5b986bdfb9e2eea22d34
 
                   /*Se hace circular la lista que controla la pcb*/
                   ctrl->rear = ctrl->front; //Igualamos el frente y el fondo
@@ -1156,7 +1150,7 @@ void state_change(pcbCtrl *ctrl, pcbStates *states)
 /*0_state_change*/
 
 /*1_changer Esta funcion cambia un proceso de una lista a otra*/
-void changer(pcbCtrl *lista, pcb *elm, pcbStates *states)
+void changer(pcbCtrl *lista, pcb *elm, pcbStates *states, int mode)
 {
   int flag = 0;
   //1_Eliminaion del estado en su lista de estado previo
@@ -1229,21 +1223,38 @@ void changer(pcbCtrl *lista, pcb *elm, pcbStates *states)
   //0_Eliminaion del estado en su lista de estado previo
 
   //Adicion del elemento a la nueva lista
-  if(lista->front != NULL)
-  {
-    elm->stateSense->next = lista->front;
-    elm->stateSense->prev = lista->rear;
-    lista->front->stateSense->prev = elm;
-    lista->rear->stateSense->next = elm;
-    lista->rear = elm;
-  }
-  else
-  {
-    lista->front = elm;
-    lista->rear = elm;
-    elm->stateSense->next = elm;
-    elm->stateSense->prev = elm;
-  }
+  if(mode == CHANG_STATES)
+    if(lista->front != NULL)
+    {
+      elm->stateSense->next = lista->front;
+      elm->stateSense->prev = lista->rear;
+      lista->front->stateSense->prev = elm;
+      lista->rear->stateSense->next = elm;
+      lista->rear = elm;
+    }
+    else
+    {
+      lista->front = elm;
+      lista->rear = elm;
+      elm->stateSense->next = elm;
+      elm->stateSense->prev = elm;
+    }
+  else  //CHANG_SEM
+    if(lista->front != NULL)
+    {
+      elm->semSense->next = lista->front;
+      elm->semSense->prev = lista->rear;
+      lista->front->semSense->prev = elm;
+      lista->rear->semSense->next = elm;
+      lista->rear = elm;
+    }
+    else
+    {
+      lista->front = elm;
+      lista->rear = elm;
+      elm->semSense->next = elm;
+      elm->semSense->prev = elm;
+    }
 }
 /*1_changer*/
 
@@ -1306,7 +1317,5 @@ void del_option(pcbCtrl *ctrl, pcbStates *states, groupsCtrl *gp, usersCtrl *us)
   }while( ban == 0 );
 }
 /*0_del_options*/
-
-/*1_*/
 
 /**/

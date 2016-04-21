@@ -37,4 +37,9 @@
 #define REP_FAIL "El id y/o nombre que ha introducido ya existe(n)."
 #define DEFAULT_FAIL "Opcion no valida. Vuelva a intentar."
 #define CANCEL_PCSS "creacion del proceso."
+
+/*Changer mode*/
+#define CHANG_STATES 0 //Para cambir de listas de estados
+#define CHANG_SEM 1 //Para mover a la cola de un semaforo
+
 #endif
